@@ -236,6 +236,13 @@
         const sendBtn = document.getElementById('send-btn');
         const sendBtnIcon = sendBtn.querySelector('.material-symbols-rounded');
 
+        // ✨ 新增：原生自動變高魔法，監聽 textarea 的輸入事件
+        userInput.addEventListener('input', function() {
+            this.style.height = 'auto'; // 先重置，以便在刪除文字時能縮小
+            // 設定高度為真實的內容高度，但設定一個 240px 的上限防呆 (與 tailwind 的 max-h-60 匹配)
+            this.style.height = (this.scrollHeight > 240 ? 240 : this.scrollHeight) + 'px';
+        });
+
         // ==== 語音引擎模組 (Web Speech API) ====
         let recognition = null;
         let isRecording = false;
@@ -269,6 +276,8 @@
                     }
                 }
                 userInput.value = finalTranscript + interimTranscript;
+                
+                // 觸發自適應高度
                 userInput.style.height = 'auto';
                 userInput.style.height = (userInput.scrollHeight > 240 ? 240 : userInput.scrollHeight) + 'px';
 
@@ -453,6 +462,12 @@
                 e.preventDefault(); currentImageData = pasteText; const mimeMatch = pasteText.match(/data:(.*?);/); currentMimeType = mimeMatch ? mimeMatch[1] : 'image/png';
                 document.getElementById('image-preview').src = currentImageData; document.getElementById('image-preview').classList.remove('hidden'); document.getElementById('doc-preview').classList.add('hidden'); document.getElementById('youtube-preview').classList.add('hidden'); document.getElementById('upload-preview-container').classList.remove('hidden');
             }
+            
+            // 讓貼上文字時，也能順利觸發自動變高
+            setTimeout(() => {
+                userInput.style.height = 'auto';
+                userInput.style.height = (userInput.scrollHeight > 240 ? 240 : userInput.scrollHeight) + 'px';
+            }, 0);
         });
 
         userInput.addEventListener('keydown', (e) => {
@@ -486,6 +501,7 @@
             }
 
             userInput.value = ''; 
+            // ✨ 新增：發送後高度重置為單行
             userInput.style.height = 'auto';
             finalTranscript = ''; 
 
