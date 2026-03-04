@@ -102,7 +102,7 @@
             </div>
         </div>
 
-        <div class="p-4 border-t border-[#333] text-xs text-gray-500 text-center font-mono shrink-0">v86.2 Gems Edition</div>
+        <div class="p-4 border-t border-[#333] text-xs text-gray-500 text-center font-mono shrink-0">Gems Supported Edition</div>
     </aside>
 
     <main class="flex-1 flex flex-col relative bg-[#131314] overflow-hidden w-full">
@@ -148,7 +148,7 @@
                 <div class="bg-[#1e1f22] rounded-2xl border border-[#333] shadow-[0_-10px_40px_rgba(0,0,0,0.5)] focus-within:border-blue-500 transition-all p-1.5 sm:p-2 mx-1 sm:mx-0">
                     <div class="flex items-center flex-wrap gap-3 sm:gap-4 px-2 sm:px-3 mb-1 sm:mb-2 pt-1 border-b border-[#333] pb-1.5 sm:pb-2">
                         
-                        <!-- ✨ Gems 角色選擇器 -->
+                        <!-- ✨ 新增：Gems 角色選擇器 -->
                         <div class="relative flex items-center mr-auto sm:mr-2 shrink-0">
                             <span class="absolute left-2 text-blue-400 material-symbols-rounded text-[14px] pointer-events-none">diamond</span>
                             <select id="gem-selector" class="pl-7 pr-6 py-1 bg-[#2a2b2f] hover:bg-[#333] text-blue-100 text-xs font-bold tracking-wide rounded-lg border border-[#444] outline-none focus:border-blue-500 transition-all appearance-none cursor-pointer max-w-[140px] sm:max-w-[180px] truncate shadow-sm">
@@ -219,7 +219,6 @@
     <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-20 hidden md:hidden" onclick="toggleSidebar()"></div>
 
     <script>
-        // ⚠️ 確保此為您的最新 GAS URL
         const GAS_URL = "https://script.google.com/macros/s/AKfycbxdaE6GhEzJ8CMr-n5hyvHB0UamZllt-fFcul-blcbEdnPpm4hRxp3idYQrx-H0q_1K/exec";
 
         marked.use({
@@ -241,7 +240,7 @@
         let abortController = null; 
         let silenceTimer = null; 
 
-        // 儲存從後端抓取的 Gems 列表
+        // ✨ 儲存從後端抓取的 Gems 列表
         let currentGemsList = []; 
 
         const chatContainer = document.getElementById('chat-container');
@@ -249,7 +248,7 @@
         const sendBtn = document.getElementById('send-btn');
         const sendBtnIcon = sendBtn.querySelector('.material-symbols-rounded');
 
-        // ✨ 原生自動變高魔法
+        // 原生自動變高魔法
         userInput.addEventListener('input', function() {
             this.style.height = 'auto'; 
             this.style.height = (this.scrollHeight > 240 ? 240 : this.scrollHeight) + 'px';
@@ -307,8 +306,8 @@
             if (!window.speechSynthesis) return false;
             window.speechSynthesis.cancel(); 
             
-            // 安全移除 markdown block，避免使用反引號導致語法錯誤
-            let cleanText = text.replace(/\x60{3}[\s\S]*?\x60{3}/g, '').replace(/https?:\/\/[^\s]+/g, '網址').replace(/[*_#`~|]/g, '').trim();
+            // 修復正規表達式截斷錯誤 (使用 `{3}` 取代直接使用反引號避免 parser 問題)
+            let cleanText = text.replace(/`{3}[\s\S]*?`{3}/g, '').replace(/https?:\/\/[^\s]+/g, '網址').replace(/[*_#`~|]/g, '').trim();
             if (!cleanText) return false;
             
             let utterance = new SpeechSynthesisUtterance(cleanText);
@@ -367,13 +366,11 @@
             const isWebSearchEnabled = document.getElementById('web-search-toggle').checked;
             const isAutoImageEnabled = document.getElementById('auto-image-toggle').checked;
             
-            // ✨ 獲取目前選中的 Gem 提示詞與綁定模型
+            // ✨ 獲取目前選中的 Gem 提示詞
             let activeGemPrompt = null;
-            let activeGemModel = null;
             const gemSelector = document.getElementById('gem-selector');
             if (gemSelector.value !== "") {
                 activeGemPrompt = currentGemsList[parseInt(gemSelector.value)].prompt;
-                activeGemModel = currentGemsList[parseInt(gemSelector.value)].model;
             }
 
             let displayMsg = text;
@@ -383,8 +380,7 @@
             // 如果有選定 Gem，在畫面稍微提示使用者
             if (activeGemPrompt && !currentDocumentName && !currentYouTubeId) {
                 const gemName = currentGemsList[parseInt(gemSelector.value)].name;
-                const modelTag = activeGemModel ? ` (${activeGemModel})` : '';
-                displayMsg = `【使用角色：${gemName}${modelTag}】\n${text}`;
+                displayMsg = `【使用角色：${gemName}】\n${text}`;
             }
 
             appendMessage('user', displayMsg, currentImageData);
@@ -400,7 +396,8 @@
             try {
                 const response = await fetch(GAS_URL, {
                     method: 'POST',
-                    body: JSON.stringify({ message: payloadText, session_id: currentSessionId, file_data: imgBase64, mime_type: mime, web_search: isWebSearchEnabled, auto_image: isAutoImageEnabled, youtube_id: finalYoutubeId, gem_prompt: activeGemPrompt, gem_model: activeGemModel }),
+                    // ✨ 將 gem_prompt 變數傳送給後端
+                    body: JSON.stringify({ message: payloadText, session_id: currentSessionId, file_data: imgBase64, mime_type: mime, web_search: isWebSearchEnabled, auto_image: isAutoImageEnabled, youtube_id: finalYoutubeId, gem_prompt: activeGemPrompt }),
                     signal: abortController.signal
                 });
                 const data = await response.json(); removeLoading(loadingId);
@@ -483,6 +480,4 @@
     </script>
 </body>
 </html>
-
-
 
